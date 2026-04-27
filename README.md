@@ -35,7 +35,6 @@ cp env.template .env
 | Inference | [docs/INFERENCE.md](docs/INFERENCE.md) |
 | Supported Models | [docs/MODELS.md](docs/MODELS.md) |
 | Adding Models | [docs/ADDING_MODELS.md](docs/ADDING_MODELS.md) |
-| End-to-End Workflow | [docs/DATA_GENERATOR.md](docs/DATA_GENERATOR.md) |
 | FAQ | [docs/FAQ.md](docs/FAQ.md) |
 
 ---
