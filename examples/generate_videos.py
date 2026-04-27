@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""VBVR-EvalKit Video Generation"""
+"""VBVR-InferKit Video Generation"""
 
 import shutil
 import os
@@ -12,8 +12,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from vbvrevalkit.runner.inference import InferenceRunner
-from vbvrevalkit.runner.MODEL_CATALOG import AVAILABLE_MODELS, get_model_family
+from vbvrinferkit.runner.inference import InferenceRunner
+from vbvrinferkit.runner.MODEL_CATALOG import AVAILABLE_MODELS, get_model_family
 
 
 def get_video_frame_count(video_path: str) -> Optional[int]:
@@ -250,7 +250,7 @@ def run_pilot_experiment(
     skip_existing: bool = True,
 ) -> Dict[str, Any]:
     """Run full experiment with sequential execution."""
-    print("VBVR-EvalKit Experiment")
+    print("VBVR-InferKit Experiment")
     print(f"\nConfiguration:")
     print(f"  Models: {len(models)} - {', '.join(models.keys())}")
     print(f"  Domains: {len(tasks_by_domain)}")
@@ -380,7 +380,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(
-        description="VBVR-EvalKit Video Generation - Flexible model and task selection",
+        description="VBVR-InferKit Video Generation - Flexible model and task selection",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
             Examples:

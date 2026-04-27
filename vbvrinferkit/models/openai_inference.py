@@ -371,7 +371,7 @@ class SoraService:
 
 class OpenAIWrapper(ModelWrapper):
     """
-    VBVR-EvalKit wrapper for SoraService to match the standard interface.
+    VBVR-InferKit wrapper for SoraService to match the standard interface.
     """
     
     def __init__(

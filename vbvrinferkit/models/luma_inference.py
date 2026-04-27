@@ -281,7 +281,7 @@ class LumaInference:
 
 class LumaWrapper(ModelWrapper):
     """
-    VBVR-EvalKit wrapper for Luma Dream Machine to match standard interface.
+    VBVR-InferKit wrapper for Luma Dream Machine to match standard interface.
     """
     
     def __init__(
@@ -312,7 +312,7 @@ class LumaWrapper(ModelWrapper):
         **kwargs
     ) -> Dict[str, Any]:
         """
-        Generate video using Luma Dream Machine (matches VBVR-EvalKit interface).
+        Generate video using Luma Dream Machine (matches VBVR-InferKit interface).
         
         Args:
             image_path: Path to input image

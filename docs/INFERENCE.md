@@ -1,4 +1,4 @@
-# VBVR-EvalKit Inference Module
+# VBVR-InferKit Inference Module
 
 ## Quick Start
 
@@ -15,9 +15,9 @@ python examples/generate_videos.py --questions-dir ./questions --output-dir ./ou
 
 ## Core Concepts
 
-### Task Pairs: The Evaluation Unit
+### Task Pairs
 
-VBVR-EvalKit evaluates video models' reasoning capabilities through **Task Pairs** - carefully designed visual reasoning problems:
+VBVR-InferKit generates videos from **Task Pairs** — carefully designed visual reasoning problems:
 
 | Component | File | Purpose | Required |
 |-----------|------|---------|----------|
@@ -44,7 +44,7 @@ Models receive the initial state + prompt and must generate videos demonstrating
 
 ## Architecture
 
-VBVR-EvalKit uses a **modular architecture** with dynamic loading:
+VBVR-InferKit uses a **modular architecture** with dynamic loading:
 
 - **MODEL_CATALOG**: Registry of 37 models across 15 families
 - **Dynamic Loading**: Models loaded on-demand via importlib
@@ -71,7 +71,7 @@ outputs/
 ## Python API
 
 ```python
-from vbvrevalkit.runner.inference import InferenceRunner
+from vbvrinferkit.runner.inference import InferenceRunner
 
 runner = InferenceRunner(output_dir="./outputs")
 result = runner.run(

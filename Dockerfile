@@ -48,8 +48,7 @@ RUN mkdir -p /workspace/weights \
     /workspace/.cache/torch \
     /workspace/.cache/transformers \
     /workspace/data/questions \
-    /workspace/data/outputs \
-    /workspace/data/scorings
+    /workspace/data/outputs
 
 # Expose Web Dashboard port
 EXPOSE 5000

@@ -1,6 +1,6 @@
 #!/bin/bash
 ##############################################################################
-# VBVR-EvalKit Setup - Shared Library
+# VBVR-InferKit Setup - Shared Library
 ##############################################################################
 
 set -euo pipefail

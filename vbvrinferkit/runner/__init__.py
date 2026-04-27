@@ -1,5 +1,5 @@
 """
-Inference runners for VBVR-EvalKit.
+Inference runners for VBVR-InferKit.
 """
 
 from .inference import run_inference, InferenceRunner
