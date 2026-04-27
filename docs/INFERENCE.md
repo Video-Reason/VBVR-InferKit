@@ -46,12 +46,12 @@ Models receive the initial state + prompt and must generate videos demonstrating
 
 VBVR-InferKit uses a **modular architecture** with dynamic loading:
 
-- **MODEL_CATALOG**: Registry of 37 models across 15 families
+- **MODEL_CATALOG**: Registry of 32 models across 12 families
 - **Dynamic Loading**: Models loaded on-demand via importlib
 - **Unified Interface**: All models inherit from `ModelWrapper`
 - **Two Categories**:
   - **Commercial APIs**: Instant setup with API keys (Luma, Veo, Kling, Sora, Runway)
-  - **Open-Source**: Local installation required (LTX-Video, LTX-2, HunyuanVideo, DynamiCrafter, SVD)
+  - **Open-Source**: Local installation required (LTX-Video, LTX-2, HunyuanVideo, WAN, CogVideoX, SVD)
 
 ## Output Structure
 

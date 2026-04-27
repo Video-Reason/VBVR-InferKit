@@ -366,7 +366,7 @@ class SoraService:
 
 
 # ========================================
-# VBVREVALKIT WRAPPER CLASS
+# WRAPPER CLASS
 # ========================================
 
 class OpenAIWrapper(ModelWrapper):
