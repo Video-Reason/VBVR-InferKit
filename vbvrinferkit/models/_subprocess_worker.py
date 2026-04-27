@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generic subprocess worker for VBVR-EvalKit model inference.
+"""Generic subprocess worker for VBVR-InferKit model inference.
 
 This script runs inside a model-specific virtual environment.
 It imports the model wrapper (which may have heavy dependencies like
@@ -23,7 +23,7 @@ from pathlib import Path
 
 
 def main():
-    parser = argparse.ArgumentParser(description="VBVR-EvalKit subprocess worker")
+    parser = argparse.ArgumentParser(description="VBVR-InferKit subprocess worker")
     parser.add_argument("--model-name", required=True)
     parser.add_argument("--image-path", required=True)
     parser.add_argument("--prompt", required=True)
@@ -31,7 +31,7 @@ def main():
     parser.add_argument("--kwargs-json", default="{}")
     args = parser.parse_args()
 
-    # Ensure VBVR-EvalKit root is on sys.path
+    # Ensure VBVR-InferKit root is on sys.path
     vbvr_root = str(Path(__file__).parent.parent.parent)
     if vbvr_root not in sys.path:
         sys.path.insert(0, vbvr_root)
@@ -39,7 +39,7 @@ def main():
     start_time = time.time()
 
     # Import catalog (light - no heavy deps)
-    from vbvrevalkit.runner.MODEL_CATALOG import AVAILABLE_MODELS
+    from vbvrinferkit.runner.MODEL_CATALOG import AVAILABLE_MODELS
 
     if args.model_name not in AVAILABLE_MODELS:
         result = {

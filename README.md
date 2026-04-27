@@ -1,16 +1,16 @@
-# VBVR-EvalKit
+# VBVR-InferKit
 
-The official evaluation toolkit for [Very Big Video Reasoning (VBVR)](https://video-reason.com/). Unified inference and evaluation across 37 video generation models.
+Unified inference toolkit for [Very Big Video Reasoning (VBVR)](https://video-reason.com/). Generate videos across **32 video generation models** with a single command.
 
-- **37 Models**: Commercial APIs (Luma, Veo, Kling, Sora, Runway) and open-source models (LTX-Video, LTX-2, HunyuanVideo, SVD, WAN, CogVideoX, and more)
-- **VBVR-Bench**: 100+ rule-based evaluators with deterministic 0–1 scores and no API calls
-- **Coming Soon**: Human evaluation (Gradio) and VLM-as-a-Judge (GPT-4o, InternVL, Qwen3-VL)
+- **32 Models**: Commercial APIs (Luma, Veo, Kling, Sora, Runway) and open-source models (LTX-Video, LTX-2, HunyuanVideo, SVD, WAN, CogVideoX, and more)
+- **Per-model environments**: Isolated venvs with setup scripts for each open-source model
+- **VBVR-native**: Discovers tasks from the standard VBVR directory structure
 
 ## Quick Start
 
 ```bash
 # Install
-git clone https://github.com/Video-Reason/VBVR-EvalKit.git && cd VBVR-EvalKit
+git clone https://github.com/Video-Reason/VBVR-InferKit.git && cd VBVR-InferKit
 python -m venv venv && source venv/bin/activate
 pip install -e .
 
@@ -19,33 +19,9 @@ bash setup/install_model.sh --model svd --validate
 
 # Inference
 python examples/generate_videos.py --questions-dir setup/test_assets/ --output-dir ./outputs --model svd
-
-# Evaluation (VBVR-Bench)
-python examples/score_videos.py --inference-dir ./outputs
 ```
 
-## Evaluation
-
-VBVR-Bench matches each task to a rule-based evaluator by the **generator name** in the directory path. The evaluator needs both the generated video and reference data side by side:
-
-```
-{model}/{generator_name}/{task_type}/{task_id}/{run_id}/
-    ├── video/output.mp4          # generated video
-    └── question/                 # reference data
-        ├── first_frame.png
-        ├── final_frame.png
-        ├── prompt.txt
-        └── ground_truth.mp4     # optional
-```
-
-```bash
-python examples/score_videos.py --inference-dir ./outputs           # task_specific score only
-python examples/score_videos.py --inference-dir ./outputs --full-score  # all 5 dimensions
-```
-
-See [docs/En/SCORING.md](docs/En/SCORING.md) for the full end-to-end workflow, scoring dimensions, output format, and CLI reference.
-
-## API Keys (Inference Only)
+## API Keys (Commercial Models)
 
 ```bash
 cp env.template .env
@@ -56,7 +32,6 @@ cp env.template .env
 
 | Topic | Link |
 |-------|------|
-| Scoring (VBVR-Bench) | [docs/SCORING.md](docs/SCORING.md) |
 | Inference | [docs/INFERENCE.md](docs/INFERENCE.md) |
 | Supported Models | [docs/MODELS.md](docs/MODELS.md) |
 | Adding Models | [docs/ADDING_MODELS.md](docs/ADDING_MODELS.md) |

@@ -4,7 +4,7 @@
 
 ### Q: After `pip install -e .`, running an open-source model throws `ModuleNotFoundError: No module named 'diffusers'`
 
-**Cause:** Open-source model dependencies (torch, diffusers, transformers, etc.) are not included in VBVR-EvalKit's core dependencies and must be installed separately.
+**Cause:** Open-source model dependencies (torch, diffusers, transformers, etc.) are not included in VBVR-InferKit's core dependencies and must be installed separately.
 
 **Solutions:**
 
@@ -77,7 +77,7 @@ rm outputs/svd/test_task/test_0000.mp4
 **Solution:** List models directly via Python:
 ```bash
 python -c "
-from vbvrevalkit.runner.MODEL_CATALOG import AVAILABLE_MODELS, MODEL_FAMILIES
+from vbvrinferkit.runner.MODEL_CATALOG import AVAILABLE_MODELS, MODEL_FAMILIES
 for f, ms in MODEL_FAMILIES.items():
     print(f'{f} ({len(ms)}):')
     for m in ms: print(f'  {m}')
@@ -102,50 +102,11 @@ print(f'\nTotal: {len(AVAILABLE_MODELS)} models')
 
 ---
 
-## Evaluation
-
-### Q: How do I run VBVR-Bench evaluation?
-
-VBVR-Bench is the evaluation system for VBVR-EvalKit. It uses 100+ task-specific rule-based evaluators — no API calls needed:
-
-```bash
-# Basic evaluation (task_specific dimension only)
-python examples/score_videos.py --inference-dir ./outputs
-
-# Full 5-dimension weighted score
-python examples/score_videos.py --inference-dir ./outputs --full-score
-
-# With GT data
-python examples/score_videos.py --inference-dir ./outputs --gt-base-path /path/to/gt --device cuda
-```
-
----
-
-### Q: What do the scoring dimensions mean?
-
-| Dimension | Weight | Description |
-|-----------|--------|-------------|
-| `first_frame_consistency` | 15% | How well the first frame matches the input image |
-| `final_frame_accuracy` | 35% | Whether the final frame matches the expected result |
-| `temporal_smoothness` | 15% | Consistency between consecutive frames |
-| `visual_quality` | 10% | Sharpness, noise levels |
-| `task_specific` | 25% | Task-specific reasoning correctness |
-
-Default mode returns only `task_specific`. Use `--full-score` for the weighted combination.
-
----
-
-### Q: Can I resume an interrupted evaluation?
-
-Yes. VBVR-Bench saves progress after each task. Simply re-run the same command — already-evaluated tasks are automatically skipped.
-
----
-
 ## Environment Variables
 
 ### Q: Which API keys are needed?
 
-API keys are only needed for **inference** with commercial models, not for evaluation.
+API keys are needed for **inference** with commercial models.
 
 | Model Family | Environment Variable | How to Obtain |
 |-------------|---------------------|---------------|

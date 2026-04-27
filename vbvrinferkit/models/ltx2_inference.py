@@ -1,7 +1,7 @@
 """
-LTX-2 Inference Service for VBVR-EvalKit
+LTX-2 Inference Service for VBVR-InferKit
 
-Wrapper for the LTX-2 model to integrate with VBVR-EvalKit's unified inference interface.
+Wrapper for the LTX-2 model to integrate with VBVR-InferKit's unified inference interface.
 Supports text-to-video and image-to-video generation using the LTX-2 19B model.
 
 The model is downloaded to LTX-2 directory at project root.
@@ -456,7 +456,7 @@ class LTX2Service:
 
 class LTX2Wrapper(ModelWrapper):
     """
-    Wrapper for LTX2Service to match VBVR-EvalKit's standard interface.
+    Wrapper for LTX2Service to match VBVR-InferKit's standard interface.
     """
 
     def __init__(
@@ -502,7 +502,7 @@ class LTX2Wrapper(ModelWrapper):
         output_filename: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
-        """Generate video using LTX-2 (matches VBVR-EvalKit interface)."""
+        """Generate video using LTX-2 (matches VBVR-InferKit interface)."""
         kwargs.pop("question_data", None)
         return self.service.generate(
             image_path=image_path,

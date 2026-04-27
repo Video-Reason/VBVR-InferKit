@@ -1,4 +1,4 @@
-"""HunyuanVideo-I2V Inference Service for VBVR-EvalKit"""
+"""HunyuanVideo-I2V Inference Service for VBVR-InferKit"""
 
 import os
 import shutil
@@ -355,7 +355,7 @@ class HunyuanVideoService:
 
 
 class HunyuanVideoWrapper(ModelWrapper):
-    """Wrapper for HunyuanVideoService to match VBVR-EvalKit's standard interface."""
+    """Wrapper for HunyuanVideoService to match VBVR-InferKit's standard interface."""
     
     def __init__(
         self,

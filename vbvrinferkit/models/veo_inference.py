@@ -390,7 +390,7 @@ class VeoService:
 
 class VeoWrapper(ModelWrapper):
     """
-    VBVR-EvalKit wrapper for VeoService to match the standard interface.
+    VBVR-InferKit wrapper for VeoService to match the standard interface.
     """
     
     def __init__(

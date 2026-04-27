@@ -1,10 +1,8 @@
 """
-VBVR-EvalKit - A unified framework for video model inference and evaluation.
+VBVR-InferKit - Unified inference toolkit for video generation models.
 
-This framework provides a unified interface for 40+ video generation models 
-and comprehensive evaluation pipelines for reasoning capabilities.
-
-Focus: Inference and evaluation only. Data generation is handled externally.
+Provides a unified interface for 32+ video generation models
+across commercial APIs and open-source implementations.
 """
 
 __version__ = "0.1.0"

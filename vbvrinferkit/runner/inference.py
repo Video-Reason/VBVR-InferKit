@@ -1,4 +1,4 @@
-"""VBVR-EvalKit Inference Runner - Multi-Provider Video Generation"""
+"""VBVR-InferKit Inference Runner - Multi-Provider Video Generation"""
 
 import importlib
 import json
@@ -14,7 +14,7 @@ from ..models.base import ModelWrapper
 # Path to the subprocess worker script
 _WORKER_SCRIPT = Path(__file__).parent.parent / "models" / "_subprocess_worker.py"
 
-# VBVR-EvalKit root directory
+# VBVR-InferKit root directory
 _VBVR_ROOT = Path(__file__).parent.parent.parent
 _UNKNOWN_DOMAIN = "unknown_task"
 _UNKNOWN_TASK_ID = "unknown"

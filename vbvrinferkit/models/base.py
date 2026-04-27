@@ -1,5 +1,5 @@
 """
-Base classes for VBVR-EvalKit model wrappers.
+Base classes for VBVR-InferKit model wrappers.
 
 Provides abstract interfaces to ensure consistency across all video generation models.
 """
@@ -12,7 +12,7 @@ import sys
 
 class ModelWrapper(ABC):
     """
-    Abstract base class for all model wrappers in VBVR-EvalKit.
+    Abstract base class for all model wrappers in VBVR-InferKit.
     
     Ensures consistent interface across all video generation models while allowing
     each implementation to handle their specific service logic.
@@ -32,7 +32,7 @@ class ModelWrapper(ABC):
         self.output_dir.mkdir(exist_ok=True, parents=True)
         self.kwargs = kwargs
         
-        # Get VBVR-EvalKit root directory
+        # Get VBVR-InferKit root directory
         self.vbvr_root = Path(__file__).parent.parent.parent
     
     def get_model_python_interpreter(self, model_id: Optional[str] = None) -> str:
