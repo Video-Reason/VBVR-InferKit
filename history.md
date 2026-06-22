@@ -16,11 +16,15 @@ image-to-video (i2v) and text+video-to-video (v2v) models.
 | Repo | Local path | Branch | Remote |
 |------|-----------|--------|--------|
 | VR-Object-Permanence (VROP) | `~/VR-Object-Permanence` | `zhanghaotian` | `hipo-dev/VR-Object-Permanence` → **PR #6** |
-| VBVR-InferKit | `~/haotian/projects/VBVR-InferKit` | `zhanghaotian` | fork `Gujimaji/VBVR-InferKit` (+ cross-fork **PR #1** to `MJXWANG/VBVR-InferKit`) |
+| VBVR-InferKit | `~/haotian/projects/VBVR-InferKit` | `zhanghaotian` | **`Video-Reason/VBVR-InferKit`** (private) → **PR #4** |
 
-> The VBVR upstream `MJXWANG/VBVR-InferKit` is read-only for our account
-> (`Gujimaji`), so work lives on a fork. The `zhanghaotian` branch is the canonical
-> place for all VBVR work; PR #1 mirrors it to upstream.
+> **Repo correction (2026-06-22):** the canonical repo is the private
+> `Video-Reason/VBVR-InferKit`, where we have direct push access — work goes on a
+> branch there, no fork needed. An earlier harness misconfiguration had `origin` set
+> to the public `MJXWANG/VBVR-InferKit` and a `Gujimaji` fork; work was mistakenly
+> pushed there and a PR was opened against the public MJXWANG repo (since closed and
+> removed). The `zhanghaotian` branch on `Video-Reason` is the canonical place for all
+> VBVR work; PR #4 tracks it.
 
 ---
 
