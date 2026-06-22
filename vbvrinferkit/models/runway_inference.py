@@ -65,6 +65,15 @@ class RunwayService:
                 "ratios": ["1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672"],
                 "description": "Runway Gen-4 Aleph - Premium quality"
             },
+            "aleph2": {
+                # Aleph is a video-to-video model: it edits/continues an input video.
+                # Ratios per runwayml SDK 5.2.0 video_to_video.create() for model='aleph2'.
+                "durations": [5, 10],
+                "ratios": ["1280:720", "720:1280", "1112:834", "834:1112", "960:960",
+                           "1470:630", "992:432", "864:496", "752:560", "640:640",
+                           "560:752", "496:864"],
+                "description": "Runway Aleph 2 - Video-to-video (text + video -> video)"
+            },
             "gen3a_turbo": {
                 "durations": [5, 10],
                 "ratios": ["1280:768", "768:1280"],  # Gen-3 specific pixel dimensions
@@ -264,6 +273,98 @@ class RunwayService:
             except Exception as e:
                 logger.warning(f"Failed to clean up processed image: {e}")
     
+    async def generate_video_to_video(
+        self,
+        prompt: str,
+        video_path: Union[str, Path],
+        duration: Optional[int] = None,
+        ratio: Optional[str] = None,
+        output_path: Optional[Path] = None,
+    ) -> Dict[str, Any]:
+        """
+        Generate a video from text prompt + input video (Aleph video-to-video).
+
+        Aleph edits/continues the input video under text guidance. The input video
+        defines the spatial dimensions, so `ratio` is optional — only forwarded when
+        explicitly provided and supported.
+
+        Args:
+            prompt: Text instructions for the video edit/continuation.
+            video_path: Path to the input video (uploaded via Runway ephemeral upload).
+            duration: Optional output duration in seconds.
+            ratio: Optional output ratio (model-specific pixel dimensions).
+            output_path: Optional local path to save the result.
+
+        Returns:
+            Dict with task_id, video_url, status (+ video_path when downloaded).
+        """
+        if ratio and ratio not in self.model_constraints["ratios"]:
+            logger.warning(f"Ratio {ratio} not supported for {self.model}; letting Aleph infer from the input video")
+            ratio = None
+        if duration and duration not in self.model_constraints["durations"]:
+            logger.warning(f"Duration {duration}s not supported for {self.model}; using model default")
+            duration = None
+
+        # Upload the input video (ephemeral upload handles any file up to 200 MB).
+        video_uri = await self._upload_file(video_path)
+
+        result = await self._generate_v2v_with_runway(prompt, video_uri, duration, ratio)
+
+        if output_path and result.get("video_url"):
+            saved_path = await self._download_video(result["video_url"], output_path)
+            result["video_path"] = str(saved_path)
+            logger.info(f"Video saved to: {saved_path}")
+
+        result.update({
+            "model": self.model,
+            "prompt": prompt,
+            "video_path_input": str(video_path),
+            "duration": duration,
+            "ratio": ratio,
+        })
+        return result
+
+    async def _generate_v2v_with_runway(
+        self, prompt: str, video_uri: str, duration: Optional[int], ratio: Optional[str]
+    ) -> Dict[str, Any]:
+        """Call the Runway SDK video_to_video endpoint (model='aleph2')."""
+        try:
+            from runwayml import RunwayML, TaskFailedError
+        except ImportError:
+            raise ImportError("runwayml package not installed. Run: pip install runwayml")
+
+        def _sync_generate():
+            client = RunwayML()
+            params = {
+                "model": self.model,          # "aleph2"
+                "video_uri": video_uri,
+                "prompt_text": prompt,
+            }
+            if ratio:
+                params["ratio"] = ratio
+            if duration:
+                params["duration"] = duration
+            try:
+                task = client.video_to_video.create(**params).wait_for_task_output()
+                video_url = None
+                if getattr(task, "output", None):
+                    video_url = task.output[0] if isinstance(task.output, list) else task.output
+                return {
+                    "task_id": getattr(task, "id", "unknown"),
+                    "video_url": video_url,
+                    "status": "success",
+                }
+            except TaskFailedError as e:
+                logger.error(f"Runway Aleph v2v task failed: {e.task_details}")
+                raise Exception(f"Runway Aleph v2v generation failed: {e.task_details}")
+
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, _sync_generate)
+
+    async def _upload_file(self, file_path: Union[str, Path]) -> str:
+        """Upload any file (image or video) via Runway's ephemeral upload."""
+        return await self._upload_image(file_path)
+
     async def _upload_image(self, image_path: Union[str, Path]) -> str:
         """
         Upload image using Runway's ephemeral upload feature.
@@ -400,49 +501,83 @@ class RunwayWrapper(ModelWrapper):
         duration: float = 5.0,
         output_filename: Optional[str] = None,
         ratio: Optional[str] = None,
+        video_path: Optional[Union[str, Path]] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """
         Generate video using Runway (synchronous wrapper).
-        
+
+        Routing:
+        - if `video_path` is provided (text + video -> video), use the Aleph
+          video-to-video endpoint and ignore `image_path`.
+        - otherwise, use the image-to-video endpoint (`image_path` + text).
+
         Args:
-            image_path: Path to input image
-            text_prompt: Text prompt for video generation
-            duration: Video duration in seconds (5 or 10 depending on model)
-            output_filename: Optional output filename
-            ratio: Video aspect ratio (model-specific)
-            **kwargs: Additional parameters
-            
+            image_path: Path to input image (first frame) for image-to-video.
+            text_prompt: Text prompt for video generation.
+            duration: Video duration in seconds (5 or 10 depending on model).
+            output_filename: Optional output filename.
+            ratio: Video aspect ratio (model-specific).
+            video_path: Path to input video for video-to-video (Aleph). When set,
+                the wrapper runs v2v instead of i2v.
+            **kwargs: Additional parameters.
+
         Returns:
-            Dictionary with generation results
+            Dictionary with the 8 standardized result fields.
         """
         start_time = time.time()
 
         # Convert duration to int (Runway expects int)
         duration_int = int(duration)
-        
+
         # Generate output path
         if not output_filename:
             output_filename = "video.mp4"
-        
+
         output_path = self.output_dir / output_filename
-        
-        # Run async generation in sync context
-        # Filter kwargs - RunwayService.generate_video only accepts:
-        # prompt, image_path, duration, ratio, output_path
-        # All parameters are already passed explicitly, so no additional kwargs
-        result = asyncio.run(
-            self.runway_service.generate_video(
-                prompt=text_prompt,
-                image_path=str(image_path),
-                duration=duration_int,
-                ratio=ratio,
-                output_path=output_path
-            )
-        )
-        
+
+        is_v2v = video_path is not None
+        try:
+            if is_v2v:
+                result = asyncio.run(
+                    self.runway_service.generate_video_to_video(
+                        prompt=text_prompt,
+                        video_path=str(video_path),
+                        duration=duration_int,
+                        ratio=ratio,
+                        output_path=output_path,
+                    )
+                )
+            else:
+                result = asyncio.run(
+                    self.runway_service.generate_video(
+                        prompt=text_prompt,
+                        image_path=str(image_path),
+                        duration=duration_int,
+                        ratio=ratio,
+                        output_path=output_path,
+                    )
+                )
+        except Exception as e:
+            logger.error(f"Runway generation failed: {e}")
+            return {
+                "success": False,
+                "video_path": None,
+                "error": str(e),
+                "duration_seconds": time.time() - start_time,
+                "generation_id": None,
+                "model": self.model,
+                "status": "failed",
+                "metadata": {
+                    "prompt": text_prompt,
+                    "modality": "v2v" if is_v2v else "i2v",
+                    "image_path": None if is_v2v else str(image_path),
+                    "video_path_input": str(video_path) if is_v2v else None,
+                },
+            }
+
         duration_taken = time.time() - start_time
-        
+
         return {
             "success": bool(result.get("video_path")),
             "video_path": result.get("video_path"),
@@ -453,7 +588,9 @@ class RunwayWrapper(ModelWrapper):
             "status": "success" if result.get("video_path") else "failed",
             "metadata": {
                 "prompt": text_prompt,
-                "image_path": str(image_path),
+                "modality": "v2v" if is_v2v else "i2v",
+                "image_path": None if is_v2v else str(image_path),
+                "video_path_input": str(video_path) if is_v2v else None,
                 "video_url": result.get("video_url"),
                 "duration": duration_int,
                 "ratio": result.get("ratio"),

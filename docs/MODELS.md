@@ -1,9 +1,9 @@
 
 # Supported Models
 
-VBVR-InferKit provides unified access to **32 video generation models** across **12 provider families**.
+VBVR-InferKit provides unified access to **33 video generation models** across **12 provider families**.
 
-## Commercial APIs (19 models)
+## Commercial APIs (20 models)
 
 ### Luma Dream Machine (2 models)
 **API Key:** `LUMA_API_KEY`
@@ -28,12 +28,18 @@ VBVR-InferKit provides unified access to **32 video generation models** across *
 - `kling-v2-master` - Balanced quality and speed
 - `kling-v1-6` - Improved original model
 
-### Runway ML (4 models)
+### Runway ML (5 models)
 **API Key:** `RUNWAYML_API_SECRET`
 - `runway-gen45` - World's top-rated video model (5s or 10s)
 - `runway-gen4-turbo` - Fast high-quality generation (5s or 10s)
 - `runway-gen4-aleph` - Premium quality (5s)
 - `runway-gen3a-turbo` - Proven performance (5s or 10s)
+- `runway-aleph-v2v` - **Video-to-video** (text + video → video); consumes `first_video.mp4`
+
+> **Video-to-video (TV2V):** models tagged `"modality": "v2v"` in the catalog take a
+> **video** input (`first_video.mp4`) instead of a still `first_frame.png`. The example
+> runner discovers `first_video.mp4` per task and passes it through as `video_path`;
+> see [ADDING_MODELS.md](ADDING_MODELS.md) for how to add more v2v models.
 
 ### OpenAI Sora (2 models)
 **API Key:** `OPENAI_API_KEY`

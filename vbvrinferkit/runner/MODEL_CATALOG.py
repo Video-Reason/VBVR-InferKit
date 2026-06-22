@@ -161,6 +161,16 @@ RUNWAY_MODELS = {
         "model": "gen3a_turbo",
         "description": "Runway Gen-3A Turbo - Proven performance (5s or 10s)",
         "family": "Runway ML"
+    },
+    # Video-to-video (text + video -> video). Consumes first_video.mp4, not first_frame.png.
+    "runway-aleph-v2v": {
+        "wrapper_module": "vbvrinferkit.models.runway_inference",
+        "wrapper_class": "RunwayWrapper",
+        "service_class": "RunwayService",
+        "model": "aleph2",
+        "modality": "v2v",
+        "description": "Runway Aleph 2 - Video-to-video (text + video -> video)",
+        "family": "Runway ML"
     }
 }
 
