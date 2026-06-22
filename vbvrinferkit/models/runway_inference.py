@@ -67,8 +67,10 @@ class RunwayService:
             },
             "aleph2": {
                 # Aleph is a video-to-video model: it edits/continues an input video.
-                # Ratios per runwayml SDK 5.2.0 video_to_video.create() for model='aleph2'.
-                "durations": [5, 10],
+                # Output length follows the input video; the API rejects a `duration` key,
+                # so durations is intentionally empty. Ratios per runwayml SDK 5.2.0
+                # video_to_video.create() for model='aleph2'.
+                "durations": [],
                 "ratios": ["1280:720", "720:1280", "1112:834", "834:1112", "960:960",
                            "1470:630", "992:432", "864:496", "752:560", "640:640",
                            "560:752", "496:864"],
@@ -301,14 +303,15 @@ class RunwayService:
         if ratio and ratio not in self.model_constraints["ratios"]:
             logger.warning(f"Ratio {ratio} not supported for {self.model}; letting Aleph infer from the input video")
             ratio = None
-        if duration and duration not in self.model_constraints["durations"]:
-            logger.warning(f"Duration {duration}s not supported for {self.model}; using model default")
-            duration = None
+        # NOTE: Aleph (aleph2) rejects a `duration` key — the output length follows the
+        # input video. `duration` is accepted/ignored here only for interface symmetry
+        # with i2v; it is never forwarded to the v2v endpoint.
 
         # Upload the input video (ephemeral upload handles any file up to 200 MB).
+        # The input clip must be >= 2 seconds (Runway asset minimum).
         video_uri = await self._upload_file(video_path)
 
-        result = await self._generate_v2v_with_runway(prompt, video_uri, duration, ratio)
+        result = await self._generate_v2v_with_runway(prompt, video_uri, ratio)
 
         if output_path and result.get("video_url"):
             saved_path = await self._download_video(result["video_url"], output_path)
@@ -319,15 +322,17 @@ class RunwayService:
             "model": self.model,
             "prompt": prompt,
             "video_path_input": str(video_path),
-            "duration": duration,
             "ratio": ratio,
         })
         return result
 
     async def _generate_v2v_with_runway(
-        self, prompt: str, video_uri: str, duration: Optional[int], ratio: Optional[str]
+        self, prompt: str, video_uri: str, ratio: Optional[str]
     ) -> Dict[str, Any]:
-        """Call the Runway SDK video_to_video endpoint (model='aleph2')."""
+        """Call the Runway SDK video_to_video endpoint (model='aleph2').
+
+        Aleph derives output length from the input video, so no `duration` is sent.
+        """
         try:
             from runwayml import RunwayML, TaskFailedError
         except ImportError:
@@ -342,8 +347,6 @@ class RunwayService:
             }
             if ratio:
                 params["ratio"] = ratio
-            if duration:
-                params["duration"] = duration
             try:
                 task = client.video_to_video.create(**params).wait_for_task_output()
                 video_url = None
