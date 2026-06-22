@@ -1,9 +1,9 @@
 
 # Supported Models
 
-VBVR-InferKit provides unified access to **35 video generation models** across **12 provider families**.
+VBVR-InferKit provides unified access to **37 video generation models** across **12 provider families**.
 
-## Commercial APIs (22 models)
+## Commercial APIs (24 models)
 
 ### Luma Dream Machine (2 models)
 **API Key:** `LUMA_API_KEY`
@@ -53,6 +53,15 @@ VBVR-InferKit provides unified access to **35 video generation models** across *
 
 > Routes text-to-video vs image-to-video automatically by whether an input image
 > is present. fal exposes no Seedance video-to-video endpoint, so these are T2V/I2V only.
+
+### Sora via WaveSpeed (2 models)
+**API Key:** `WAVESPEED_API_KEY`
+- `sora-2-wavespeed` - OpenAI Sora-2 served by WaveSpeed (720p)
+- `sora-2-pro-wavespeed` - OpenAI Sora-2 Pro served by WaveSpeed (up to 1080p)
+
+> Same Sora-2 models as `openai-sora-2*` but served through WaveSpeed — use these
+> when you have a WaveSpeed key instead of direct OpenAI access. Routes t2v/i2v by
+> whether an input image is present.
 
 ## Open-Source Models (13 models)
 

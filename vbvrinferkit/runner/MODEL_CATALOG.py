@@ -215,6 +215,28 @@ SEEDANCE_MODELS = {
     }
 }
 
+# OpenAI Sora via WaveSpeed (WAVESPEED_API_KEY) — no OpenAI account needed.
+# Separate transport from the direct-OpenAI OPENAI_SORA_MODELS above. The
+# wrapper routes t2v/i2v by whether an input image is present.
+WAVESPEED_SORA_MODELS = {
+    "sora-2-wavespeed": {
+        "wrapper_module": "vbvrinferkit.models.wavespeed_inference",
+        "wrapper_class": "WaveSpeedSoraWrapper",
+        "service_class": "SoraWaveSpeedService",
+        "model": "sora-2",
+        "description": "OpenAI Sora-2 via WaveSpeed - text/image to video (720p)",
+        "family": "Sora (WaveSpeed)"
+    },
+    "sora-2-pro-wavespeed": {
+        "wrapper_module": "vbvrinferkit.models.wavespeed_inference",
+        "wrapper_class": "WaveSpeedSoraWrapper",
+        "service_class": "SoraWaveSpeedService",
+        "model": "sora-2-pro",
+        "description": "OpenAI Sora-2 Pro via WaveSpeed - text/image to video (up to 1080p)",
+        "family": "Sora (WaveSpeed)"
+    }
+}
+
 # ========================================
 # OPEN-SOURCE MODELS (SUBMODULES)
 # ========================================
@@ -386,6 +408,7 @@ AVAILABLE_MODELS = {
     **RUNWAY_MODELS,
     **OPENAI_SORA_MODELS,
     **SEEDANCE_MODELS,
+    **WAVESPEED_SORA_MODELS,
     **LTX_VIDEO_MODELS,
     **HUNYUAN_VIDEO_MODELS,
     **MORPHIC_MODELS,
@@ -403,6 +426,7 @@ MODEL_FAMILIES = {
     "Runway ML": RUNWAY_MODELS,
     "OpenAI Sora": OPENAI_SORA_MODELS,
     "Seedance (ByteDance)": SEEDANCE_MODELS,
+    "Sora (WaveSpeed)": WAVESPEED_SORA_MODELS,
     "LTX-Video": LTX_VIDEO_MODELS,
     "HunyuanVideo": HUNYUAN_VIDEO_MODELS,
     "Morphic": MORPHIC_MODELS,
