@@ -194,6 +194,27 @@ OPENAI_SORA_MODELS = {
     }
 }
 
+# Seedance (ByteDance) via fal.ai — text-to-video + image-to-video (FAL_KEY).
+# The wrapper routes t2v/i2v by whether an input image is present.
+SEEDANCE_MODELS = {
+    "seedance-v1-pro": {
+        "wrapper_module": "vbvrinferkit.models.seedance_inference",
+        "wrapper_class": "SeedanceWrapper",
+        "service_class": "SeedanceService",
+        "model": "pro",
+        "description": "Seedance 1.0 Pro - Text/image to video, up to 1080p (via fal.ai)",
+        "family": "Seedance (ByteDance)"
+    },
+    "seedance-v1-lite": {
+        "wrapper_module": "vbvrinferkit.models.seedance_inference",
+        "wrapper_class": "SeedanceWrapper",
+        "service_class": "SeedanceService",
+        "model": "lite",
+        "description": "Seedance 1.0 Lite - Faster text/image to video, up to 720p (via fal.ai)",
+        "family": "Seedance (ByteDance)"
+    }
+}
+
 # ========================================
 # OPEN-SOURCE MODELS (SUBMODULES)
 # ========================================
@@ -364,6 +385,7 @@ AVAILABLE_MODELS = {
     **KLING_MODELS,
     **RUNWAY_MODELS,
     **OPENAI_SORA_MODELS,
+    **SEEDANCE_MODELS,
     **LTX_VIDEO_MODELS,
     **HUNYUAN_VIDEO_MODELS,
     **MORPHIC_MODELS,
@@ -380,6 +402,7 @@ MODEL_FAMILIES = {
     "Kling AI": KLING_MODELS,
     "Runway ML": RUNWAY_MODELS,
     "OpenAI Sora": OPENAI_SORA_MODELS,
+    "Seedance (ByteDance)": SEEDANCE_MODELS,
     "LTX-Video": LTX_VIDEO_MODELS,
     "HunyuanVideo": HUNYUAN_VIDEO_MODELS,
     "Morphic": MORPHIC_MODELS,

@@ -1,9 +1,9 @@
 
 # Supported Models
 
-VBVR-InferKit provides unified access to **33 video generation models** across **12 provider families**.
+VBVR-InferKit provides unified access to **35 video generation models** across **12 provider families**.
 
-## Commercial APIs (20 models)
+## Commercial APIs (22 models)
 
 ### Luma Dream Machine (2 models)
 **API Key:** `LUMA_API_KEY`
@@ -45,6 +45,14 @@ VBVR-InferKit provides unified access to **33 video generation models** across *
 **API Key:** `OPENAI_API_KEY`
 - `openai-sora-2` - High-quality video generation (4s/8s/12s)
 - `openai-sora-2-pro` - Enhanced model with more resolution options
+
+### Seedance / ByteDance (2 models, via fal.ai)
+**API Key:** `FAL_KEY`
+- `seedance-v1-pro` - Text/image → video, up to 1080p
+- `seedance-v1-lite` - Faster text/image → video, up to 720p
+
+> Routes text-to-video vs image-to-video automatically by whether an input image
+> is present. fal exposes no Seedance video-to-video endpoint, so these are T2V/I2V only.
 
 ## Open-Source Models (13 models)
 
