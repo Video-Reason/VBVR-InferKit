@@ -1,9 +1,9 @@
 
 # Supported Models
 
-VBVR-InferKit provides unified access to **37 video generation models** across **12 provider families**.
+VBVR-InferKit provides unified access to **36 video generation models** across **12 provider families**.
 
-## Commercial APIs (24 models)
+## Commercial APIs (23 models)
 
 ### Luma Dream Machine (2 models)
 **API Key:** `LUMA_API_KEY`
@@ -28,11 +28,10 @@ VBVR-InferKit provides unified access to **37 video generation models** across *
 - `kling-v2-master` - Balanced quality and speed
 - `kling-v1-6` - Improved original model
 
-### Runway ML (5 models)
+### Runway ML (4 models)
 **API Key:** `RUNWAYML_API_SECRET`
 - `runway-gen45` - World's top-rated video model (5s or 10s)
 - `runway-gen4-turbo` - Fast high-quality generation (5s or 10s)
-- `runway-gen4-aleph` - Premium quality (5s)
 - `runway-gen3a-turbo` - Proven performance (5s or 10s)
 - `runway-aleph-v2v` - **Video-to-video** (text + video → video); consumes `first_video.mp4`
 

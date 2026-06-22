@@ -146,14 +146,9 @@ RUNWAY_MODELS = {
         "description": "Runway Gen-4 Turbo - Fast high-quality generation (5s or 10s)",
         "family": "Runway ML"
     },
-    "runway-gen4-aleph": {
-        "wrapper_module": "vbvrinferkit.models.runway_inference",
-        "wrapper_class": "RunwayWrapper",
-        "service_class": "RunwayService",
-        "model": "gen4_aleph",
-        "description": "Runway Gen-4 Aleph - Premium quality (5s)",
-        "family": "Runway ML"
-    },
+    # NOTE: `runway-gen4-aleph` (i2v, model `gen4_aleph`) removed 2026-06-22 — the Runway API
+    # now rejects `gen4_aleph` as an invalid model id (400 "Invalid option"). Aleph is
+    # video-to-video only; use `runway-aleph-v2v` (model `aleph2`) below instead.
     "runway-gen3a-turbo": {
         "wrapper_module": "vbvrinferkit.models.runway_inference",
         "wrapper_class": "RunwayWrapper",

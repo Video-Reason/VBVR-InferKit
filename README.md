@@ -1,8 +1,8 @@
 # VBVR-InferKit
 
-Unified inference toolkit for [Very Big Video Reasoning (VBVR)](https://video-reason.com/). Generate videos across **37 video generation models** with a single command.
+Unified inference toolkit for [Very Big Video Reasoning (VBVR)](https://video-reason.com/). Generate videos across **36 video generation models** with a single command.
 
-- **37 Models**: Commercial APIs (Luma, Veo, Kling, Sora, Runway) and open-source models (LTX-Video, LTX-2, HunyuanVideo, SVD, WAN, CogVideoX, and more)
+- **36 Models**: Commercial APIs (Luma, Veo, Kling, Sora, Runway) and open-source models (LTX-Video, LTX-2, HunyuanVideo, SVD, WAN, CogVideoX, and more)
 - **Per-model environments**: Isolated venvs with setup scripts for each open-source model
 - **VBVR-native**: Discovers tasks from the standard VBVR directory structure
 

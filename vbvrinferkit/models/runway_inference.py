@@ -33,7 +33,7 @@ class RunwayService:
         Initialize Runway service.
         
         Args:
-            model: Runway model to use (gen45, gen4_turbo, gen4_aleph, gen3a_turbo)
+            model: Runway model to use (gen4.5, gen4_turbo, gen3a_turbo; aleph2 for v2v)
         """
         self.api_secret = os.getenv("RUNWAYML_API_SECRET")
         if not self.api_secret:
@@ -59,12 +59,8 @@ class RunwayService:
                 "ratios": ["1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672"],
                 "description": "Runway Gen-4 Turbo - Fast high-quality generation"
             },
-            "gen4_aleph": {
-                "durations": [5],
-                # Use actual pixel dimensions required by Runway API
-                "ratios": ["1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672"],
-                "description": "Runway Gen-4 Aleph - Premium quality"
-            },
+            # `gen4_aleph` (i2v) removed 2026-06-22 — deprecated by the Runway API
+            # (400 invalid model id). Aleph is video-to-video only; see `aleph2` below.
             "aleph2": {
                 # Aleph is a video-to-video model: it edits/continues an input video.
                 # Output length follows the input video; the API rejects a `duration` key,
