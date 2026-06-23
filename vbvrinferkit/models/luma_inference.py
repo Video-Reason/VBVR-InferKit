@@ -6,18 +6,12 @@ Direct inference API for Luma's text+image→video generation.
 
 import os
 import time
-import base64
 import requests
 from typing import Optional, Dict, Any, Union
 from pathlib import Path
-import json
-from io import BytesIO
-from PIL import Image
-import numpy as np
 from tenacity import retry, stop_after_attempt, wait_exponential
 from dotenv import load_dotenv
 
-from ..utils.s3_uploader import S3ImageUploader
 from .base import ModelWrapper
 
 # Load environment variables from .env file
@@ -80,9 +74,6 @@ class LumaInference:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
-        
-        # Initialize S3 uploader for serving images to Luma
-        self._s3_uploader = None
     
     def generate(
         self,
@@ -154,21 +145,11 @@ class LumaInference:
             if self.verbose:
                 print(f"✅ Generated video: {video_path}")
                 print(f"   Time taken: {duration_seconds:.1f}s")
-            
-            # Clean up S3 resources
-            if self._s3_uploader:
-                self._s3_uploader.cleanup()
-                if self.verbose:
-                    print("   Cleaned up temporary S3 resources")
-            
+
             return result
-            
+
         except (LumaAPIError, Exception) as e:
             duration_seconds = time.time() - start_time
-            
-            # Clean up S3 resources on error
-            if self._s3_uploader:
-                self._s3_uploader.cleanup()
             
             return {
                 "success": False,
@@ -185,19 +166,16 @@ class LumaInference:
             }
     
     def _get_image_url(self, image_path: Union[str, Path]) -> str:
-        """Convert local image to URL using S3."""
-        # Initialize S3 uploader if needed
-        if self._s3_uploader is None:
-            self._s3_uploader = S3ImageUploader()
-        
-        # Upload image and get URL
-        image_url = self._s3_uploader.upload(str(image_path))
+        """Upload local image to fal CDN and return a public URL."""
+        import fal_client
+
+        image_url = fal_client.upload_file(str(image_path))
         if not image_url:
-            raise LumaAPIError("Failed to upload image to S3")
-        
+            raise LumaAPIError("Failed to upload image to fal CDN")
+
         if self.verbose:
             print(f"Serving image at: {image_url}")
-        
+
         return image_url
     
     @retry(
