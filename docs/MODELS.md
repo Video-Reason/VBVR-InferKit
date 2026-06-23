@@ -1,9 +1,9 @@
 
 # Supported Models
 
-VBVR-InferKit provides unified access to **32 video generation models** across **12 provider families**.
+VBVR-InferKit provides unified access to **36 video generation models** across **12 provider families**.
 
-## Commercial APIs (19 models)
+## Commercial APIs (23 models)
 
 ### Luma Dream Machine (2 models)
 **API Key:** `LUMA_API_KEY`
@@ -32,13 +32,35 @@ VBVR-InferKit provides unified access to **32 video generation models** across *
 **API Key:** `RUNWAYML_API_SECRET`
 - `runway-gen45` - World's top-rated video model (5s or 10s)
 - `runway-gen4-turbo` - Fast high-quality generation (5s or 10s)
-- `runway-gen4-aleph` - Premium quality (5s)
 - `runway-gen3a-turbo` - Proven performance (5s or 10s)
+- `runway-aleph-v2v` - **Video-to-video** (text + video → video); consumes `first_video.mp4`
+
+> **Video-to-video (TV2V):** models tagged `"modality": "v2v"` in the catalog take a
+> **video** input (`first_video.mp4`) instead of a still `first_frame.png`. The example
+> runner discovers `first_video.mp4` per task and passes it through as `video_path`;
+> see [ADDING_MODELS.md](ADDING_MODELS.md) for how to add more v2v models.
 
 ### OpenAI Sora (2 models)
 **API Key:** `OPENAI_API_KEY`
 - `openai-sora-2` - High-quality video generation (4s/8s/12s)
 - `openai-sora-2-pro` - Enhanced model with more resolution options
+
+### Seedance / ByteDance (2 models, via fal.ai)
+**API Key:** `FAL_KEY`
+- `seedance-v1-pro` - Text/image → video, up to 1080p
+- `seedance-v1-lite` - Faster text/image → video, up to 720p
+
+> Routes text-to-video vs image-to-video automatically by whether an input image
+> is present. fal exposes no Seedance video-to-video endpoint, so these are T2V/I2V only.
+
+### Sora via WaveSpeed (2 models)
+**API Key:** `WAVESPEED_API_KEY`
+- `sora-2-wavespeed` - OpenAI Sora-2 served by WaveSpeed (720p)
+- `sora-2-pro-wavespeed` - OpenAI Sora-2 Pro served by WaveSpeed (up to 1080p)
+
+> Same Sora-2 models as `openai-sora-2*` but served through WaveSpeed — use these
+> when you have a WaveSpeed key instead of direct OpenAI access. Routes t2v/i2v by
+> whether an input image is present.
 
 ## Open-Source Models (13 models)
 

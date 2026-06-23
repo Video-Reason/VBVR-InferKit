@@ -36,7 +36,8 @@ dependencies = [
     "httpx>=0.25.0",
     "tenacity>=8.2.0",
     "runwayml>=3.17.0",
-    
+    "fal-client>=0.5.0",   # Seedance (ByteDance) via fal.ai
+
     # Google Cloud for Veo models
     "google-cloud-aiplatform>=1.38.0",
     "google-auth>=2.23.0",

@@ -146,20 +146,25 @@ RUNWAY_MODELS = {
         "description": "Runway Gen-4 Turbo - Fast high-quality generation (5s or 10s)",
         "family": "Runway ML"
     },
-    "runway-gen4-aleph": {
-        "wrapper_module": "vbvrinferkit.models.runway_inference",
-        "wrapper_class": "RunwayWrapper",
-        "service_class": "RunwayService",
-        "model": "gen4_aleph",
-        "description": "Runway Gen-4 Aleph - Premium quality (5s)",
-        "family": "Runway ML"
-    },
+    # NOTE: `runway-gen4-aleph` (i2v, model `gen4_aleph`) removed 2026-06-22 — the Runway API
+    # now rejects `gen4_aleph` as an invalid model id (400 "Invalid option"). Aleph is
+    # video-to-video only; use `runway-aleph-v2v` (model `aleph2`) below instead.
     "runway-gen3a-turbo": {
         "wrapper_module": "vbvrinferkit.models.runway_inference",
         "wrapper_class": "RunwayWrapper",
         "service_class": "RunwayService",
         "model": "gen3a_turbo",
         "description": "Runway Gen-3A Turbo - Proven performance (5s or 10s)",
+        "family": "Runway ML"
+    },
+    # Video-to-video (text + video -> video). Consumes first_video.mp4, not first_frame.png.
+    "runway-aleph-v2v": {
+        "wrapper_module": "vbvrinferkit.models.runway_inference",
+        "wrapper_class": "RunwayWrapper",
+        "service_class": "RunwayService",
+        "model": "aleph2",
+        "modality": "v2v",
+        "description": "Runway Aleph 2 - Video-to-video (text + video -> video)",
         "family": "Runway ML"
     }
 }
@@ -181,6 +186,49 @@ OPENAI_SORA_MODELS = {
         "model": "sora-2-pro",
         "description": "OpenAI Sora-2-Pro - Enhanced model with more resolution options",
         "family": "OpenAI Sora"
+    }
+}
+
+# Seedance (ByteDance) via fal.ai — text-to-video + image-to-video (FAL_KEY).
+# The wrapper routes t2v/i2v by whether an input image is present.
+SEEDANCE_MODELS = {
+    "seedance-v1-pro": {
+        "wrapper_module": "vbvrinferkit.models.seedance_inference",
+        "wrapper_class": "SeedanceWrapper",
+        "service_class": "SeedanceService",
+        "model": "pro",
+        "description": "Seedance 1.0 Pro - Text/image to video, up to 1080p (via fal.ai)",
+        "family": "Seedance (ByteDance)"
+    },
+    "seedance-v1-lite": {
+        "wrapper_module": "vbvrinferkit.models.seedance_inference",
+        "wrapper_class": "SeedanceWrapper",
+        "service_class": "SeedanceService",
+        "model": "lite",
+        "description": "Seedance 1.0 Lite - Faster text/image to video, up to 720p (via fal.ai)",
+        "family": "Seedance (ByteDance)"
+    }
+}
+
+# OpenAI Sora via WaveSpeed (WAVESPEED_API_KEY) — no OpenAI account needed.
+# Separate transport from the direct-OpenAI OPENAI_SORA_MODELS above. The
+# wrapper routes t2v/i2v by whether an input image is present.
+WAVESPEED_SORA_MODELS = {
+    "sora-2-wavespeed": {
+        "wrapper_module": "vbvrinferkit.models.wavespeed_inference",
+        "wrapper_class": "WaveSpeedSoraWrapper",
+        "service_class": "SoraWaveSpeedService",
+        "model": "sora-2",
+        "description": "OpenAI Sora-2 via WaveSpeed - text/image to video (720p)",
+        "family": "Sora (WaveSpeed)"
+    },
+    "sora-2-pro-wavespeed": {
+        "wrapper_module": "vbvrinferkit.models.wavespeed_inference",
+        "wrapper_class": "WaveSpeedSoraWrapper",
+        "service_class": "SoraWaveSpeedService",
+        "model": "sora-2-pro",
+        "description": "OpenAI Sora-2 Pro via WaveSpeed - text/image to video (up to 1080p)",
+        "family": "Sora (WaveSpeed)"
     }
 }
 
@@ -354,6 +402,8 @@ AVAILABLE_MODELS = {
     **KLING_MODELS,
     **RUNWAY_MODELS,
     **OPENAI_SORA_MODELS,
+    **SEEDANCE_MODELS,
+    **WAVESPEED_SORA_MODELS,
     **LTX_VIDEO_MODELS,
     **HUNYUAN_VIDEO_MODELS,
     **MORPHIC_MODELS,
@@ -370,6 +420,8 @@ MODEL_FAMILIES = {
     "Kling AI": KLING_MODELS,
     "Runway ML": RUNWAY_MODELS,
     "OpenAI Sora": OPENAI_SORA_MODELS,
+    "Seedance (ByteDance)": SEEDANCE_MODELS,
+    "Sora (WaveSpeed)": WAVESPEED_SORA_MODELS,
     "LTX-Video": LTX_VIDEO_MODELS,
     "HunyuanVideo": HUNYUAN_VIDEO_MODELS,
     "Morphic": MORPHIC_MODELS,

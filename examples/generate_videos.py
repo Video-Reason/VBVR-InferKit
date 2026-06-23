@@ -88,7 +88,8 @@ def discover_all_tasks_from_folders(questions_dir: Path, domain_filter: Optional
             first_image = task_dir / "first_frame.png"
             final_image = task_dir / "final_frame.png"
             ground_truth = task_dir / "ground_truth.mp4"
-            
+            first_video = task_dir / "first_video.mp4"  # v2v conditioning input
+
             if not prompt_file.exists():
                 print(f"    Skipping {task_id}: Missing prompt.txt")
                 continue
@@ -113,6 +114,7 @@ def discover_all_tasks_from_folders(questions_dir: Path, domain_filter: Optional
                 "prompt": prompt_text,
                 "first_image_path": str(first_image.absolute()),
                 "final_image_path": str(final_image.absolute()) if final_image.exists() else None,
+                "first_video_path": str(first_video.absolute()) if first_video.exists() else None,
                 "ground_truth_video": str(ground_truth.absolute()) if ground_truth.exists() else None,
                 "num_frames": num_frames,
                 "height": img_height,
@@ -215,6 +217,18 @@ def run_single_inference(
         generation_kwargs["height"] = height
     if width is not None:
         generation_kwargs["width"] = width
+
+    # Video-to-video models consume first_video.mp4. Pass it through as `video_path`;
+    # wrappers that support v2v route on its presence, others ignore it via **kwargs.
+    is_v2v = AVAILABLE_MODELS.get(model_name, {}).get("modality") == "v2v"
+    first_video_path = task.get("first_video_path")
+    if is_v2v:
+        if not first_video_path:
+            raise FileNotFoundError(
+                f"Model {model_name} is video-to-video but task {task_id} has no first_video.mp4"
+            )
+        generation_kwargs["video_path"] = first_video_path
+        print(f"    Video (v2v input): {first_video_path}")
 
     result = runner.run(
         model_name=model_name,
