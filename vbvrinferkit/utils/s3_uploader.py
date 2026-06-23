@@ -21,10 +21,10 @@ class S3ImageUploader:
         Args:
             bucket_name: S3 bucket name (defaults to S3_BUCKET env var)
         """
-        self.bucket_name = bucket_name or os.getenv("S3_BUCKET", "vbvrinferkit")
-        # Force us-east-2 region for vbvrinferkit bucket
-        # The bucket is in us-east-2 but AWS_REGION env var might be set to us-east-1
-        self.region = "us-east-2"
+        self.bucket_name = bucket_name or os.getenv("S3_BUCKET")
+        if not self.bucket_name:
+            raise ValueError("S3 bucket name required: pass bucket_name or set S3_BUCKET env var")
+        self.region = os.getenv("AWS_REGION", "us-east-1")
         
         # Initialize S3 client with signature version 4 and correct region
         self.s3_client = boto3.client(
@@ -38,8 +38,7 @@ class S3ImageUploader:
             )
         )
         
-        # Test prefix for uploaded images
-        self.prefix = f"temp_maze_tests/{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self.prefix = f"uploads/{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     _CONTENT_TYPES = {
         ".mp4": "video/mp4",
