@@ -33,7 +33,7 @@ class RunwayService:
         Initialize Runway service.
         
         Args:
-            model: Runway model to use (gen4.5, gen4_turbo, gen3a_turbo; aleph2 for v2v)
+            model: Runway model to use (gen4.5, gen4_turbo; aleph2 for v2v)
         """
         self.api_secret = os.getenv("RUNWAYML_API_SECRET")
         if not self.api_secret:
@@ -72,11 +72,6 @@ class RunwayService:
                            "560:752", "496:864"],
                 "description": "Runway Aleph 2 - Video-to-video (text + video -> video)"
             },
-            "gen3a_turbo": {
-                "durations": [5, 10],
-                "ratios": ["1280:768", "768:1280"],  # Gen-3 specific pixel dimensions
-                "description": "Runway Gen-3A Turbo - Proven performance"
-            }
         }
         
         if model not in constraints:
