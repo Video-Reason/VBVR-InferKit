@@ -18,18 +18,10 @@ LUMA_MODELS = {
         "wrapper_module": "vbvrinferkit.models.luma_inference",
         "wrapper_class": "LumaWrapper",
         "service_class": "LumaInference",
-        "model": "ray-2",
-        "description": "Luma Ray 2 - Latest model with best quality",
-        "family": "Luma Dream Machine"
+        "model": "ray-3.2",
+        "description": "Luma Ray 3.2 - Latest video generation model",
+        "family": "Luma"
     },
-    "luma-ray-flash-2": {
-        "wrapper_module": "vbvrinferkit.models.luma_inference",
-        "wrapper_class": "LumaWrapper",
-        "service_class": "LumaInference",
-        "model": "ray-flash-2", 
-        "description": "Luma Ray Flash 2 - Faster generation",
-        "family": "Luma Dream Machine"
-    }
 }
 
 # Google Veo Models (Gemini API with GEMINI_API_KEY)

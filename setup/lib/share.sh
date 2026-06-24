@@ -37,7 +37,6 @@ declare -a OPENSOURCE_MODELS=(
 
 declare -a COMMERCIAL_MODELS=(
     "luma-ray-2"
-    "luma-ray-flash-2"
     "veo-2"
     "veo-2.0-generate"
     "veo-3.0-fast-generate"
@@ -59,7 +58,7 @@ declare -a COMMERCIAL_MODELS=(
 # Commercial API keys lookup (bash 3.2 compatible - no associative arrays)
 _get_api_key_for_model() {
     case "$1" in
-        luma-ray-2|luma-ray-flash-2) echo "LUMA_API_KEY" ;;
+        luma-ray-2) echo "LUMA_API_KEY" ;;
         veo-2|veo-2.0-generate|veo-3.0-fast-generate|veo-3.0-generate|veo-3.1-generate|veo-3.1-fast) echo "GEMINI_API_KEY" ;;
         kling-v2-6|kling-v2-5-turbo|kling-v2-1-master|kling-v2-master|kling-v1-6) echo "KLING_API_KEY" ;;
         runway-gen45|runway-gen3a-turbo|runway-gen4-turbo) echo "RUNWAYML_API_SECRET" ;;
