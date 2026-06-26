@@ -130,6 +130,45 @@ class RunwayService:
         logger.info(f"Input aspect ratio {input_ratio:.3f} ({image_width}×{image_height}) -> Best match: {best_ratio}")
         return best_ratio
 
+    def _ensure_min_duration(self, video_path: str, min_seconds: float = 2.0) -> str:
+        import subprocess, tempfile, math
+        probe = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v",
+             "-show_entries", "stream=nb_frames,r_frame_rate",
+             "-show_entries", "format=duration",
+             "-of", "csv=p=0", video_path],
+            capture_output=True, text=True
+        )
+        lines = [l.strip() for l in probe.stdout.strip().split("\n") if l.strip()]
+        duration = float(lines[-1]) if lines else 0
+        if duration >= min_seconds:
+            return video_path
+        fps_str, nb_frames = None, None
+        for line in lines:
+            if "/" in line:
+                parts = line.split(",")
+                fps_str = parts[0]
+                if len(parts) > 1:
+                    nb_frames = int(parts[1])
+            elif line.replace(".", "").isdigit() and "." in line:
+                pass
+        if not nb_frames or nb_frames <= 0:
+            return video_path
+        target_fps = max(1, math.floor(nb_frames / min_seconds))
+        num, den = (int(x) for x in fps_str.split("/")) if fps_str and "/" in fps_str else (12, 1)
+        orig_fps = num / den
+        slow_factor = orig_fps / target_fps
+        out = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False).name
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", video_path,
+             "-filter:v", f"setpts=PTS*{slow_factor}",
+             "-r", str(target_fps),
+             "-c:v", "libx264", "-preset", "fast", "-crf", "18", out],
+            capture_output=True
+        )
+        logger.info(f"Stretched {nb_frames} frames from {duration:.1f}s to {nb_frames/target_fps:.1f}s (fps {orig_fps}->{target_fps})")
+        return out
+
     def _resize_and_pad_image(self, image_path: Union[str, Path], target_ratio: str) -> Path:
         """
         Resize and pad image to match target dimensions exactly.
@@ -302,8 +341,7 @@ class RunwayService:
         # input video. `duration` is accepted/ignored here only for interface symmetry
         # with i2v; it is never forwarded to the v2v endpoint.
 
-        # Upload the input video (ephemeral upload handles any file up to 200 MB).
-        # The input clip must be >= 2 seconds (Runway asset minimum).
+        video_path = self._ensure_min_duration(str(video_path), min_seconds=2.0)
         video_uri = await self._upload_file(video_path)
 
         result = await self._generate_v2v_with_runway(prompt, video_uri, ratio)
