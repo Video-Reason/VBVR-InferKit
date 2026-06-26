@@ -329,7 +329,7 @@ class KlingService:
     ) -> Dict[str, Any]:
         aspect_ratio = aspect_ratio or self.aspect_ratio
 
-        adapted_path = self._ensure_min_duration(str(video_path), min_seconds=3.0)
+        adapted_path = self._ensure_min_duration(str(video_path), min_seconds=4.0)
         video_url = self._upload_file(adapted_path)
         endpoint = f"{self.BASE_URL}/v1/videos/omni-video"
 
