@@ -384,26 +384,27 @@ class KlingService:
 
     def _ensure_min_duration(self, video_path: str, min_seconds: float = 3.0) -> str:
         import subprocess, tempfile, math
-        probe = subprocess.run(
+        probe_stream = subprocess.run(
             ["ffprobe", "-v", "error", "-select_streams", "v",
-             "-show_entries", "stream=nb_frames,r_frame_rate,width,height",
-             "-show_entries", "format=duration",
-             "-of", "csv=p=0", video_path],
+             "-show_entries", "stream=nb_frames,r_frame_rate,width",
+             "-of", "default=noprint_wrappers=1", video_path],
             capture_output=True, text=True
         )
-        lines = [l.strip() for l in probe.stdout.strip().split("\n") if l.strip()]
-        duration = float(lines[-1]) if lines else 0
-        fps_str, nb_frames, width = None, None, 0
-        for line in lines:
-            if "/" in line:
-                parts = line.split(",")
-                fps_str = parts[0]
-                if len(parts) > 1:
-                    nb_frames = int(parts[1])
-                if len(parts) > 2:
-                    width = int(parts[2])
-            elif line.replace(".", "").isdigit() and "." in line:
-                pass
+        probe_fmt = subprocess.run(
+            ["ffprobe", "-v", "error",
+             "-show_entries", "format=duration",
+             "-of", "default=noprint_wrappers=1", video_path],
+            capture_output=True, text=True
+        )
+        fields = {}
+        for line in (probe_stream.stdout + "\n" + probe_fmt.stdout).strip().split("\n"):
+            if "=" in line:
+                k, v = line.split("=", 1)
+                fields[k.strip()] = v.strip()
+        duration = float(fields.get("duration", 0))
+        fps_str = fields.get("r_frame_rate", "12/1")
+        nb_frames = int(fields.get("nb_frames", 0)) if fields.get("nb_frames", "N/A").isdigit() else 0
+        width = int(fields.get("width", 0)) if fields.get("width", "0").isdigit() else 0
         needs_stretch = duration < min_seconds and nb_frames and nb_frames > 0
         needs_upscale = width < 700
         if not needs_stretch and not needs_upscale:
