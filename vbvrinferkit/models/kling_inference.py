@@ -403,18 +403,24 @@ class KlingService:
                 fields[k.strip()] = v.strip()
         duration = float(fields.get("duration", 0))
         fps_str = fields.get("r_frame_rate", "12/1")
-        nb_frames = int(fields.get("nb_frames", 0)) if fields.get("nb_frames", "N/A").isdigit() else 0
+        nb_frames_raw = fields.get("nb_frames", "N/A")
+        nb_frames = int(nb_frames_raw) if nb_frames_raw.isdigit() else 0
         width = int(fields.get("width", 0)) if fields.get("width", "0").isdigit() else 0
-        needs_stretch = duration < min_seconds and nb_frames and nb_frames > 0
+        num, den = (int(x) for x in fps_str.split("/")) if fps_str and "/" in fps_str else (12, 1)
+        orig_fps = num / den
+        if nb_frames == 0 and duration > 0:
+            nb_frames = max(1, round(duration * orig_fps))
+        needs_stretch = duration < min_seconds
         needs_upscale = width < 700
         if not needs_stretch and not needs_upscale:
             return video_path
         filters = []
-        if needs_stretch:
+        if needs_stretch and nb_frames > 0:
             target_fps_val = max(1, math.floor(nb_frames / min_seconds))
-            num, den = (int(x) for x in fps_str.split("/")) if fps_str and "/" in fps_str else (12, 1)
-            orig_fps = num / den
             slow_factor = orig_fps / target_fps_val
+            filters.append(f"setpts=PTS*{slow_factor}")
+        elif needs_stretch:
+            slow_factor = min_seconds / max(duration, 0.01)
             filters.append(f"setpts=PTS*{slow_factor}")
         if needs_upscale:
             filters.append("scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720")
