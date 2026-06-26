@@ -320,15 +320,73 @@ class KlingService:
         video_result = await self._poll_task(task_id, image_path is not None)
         return video_result
     
+    async def generate_video_v2v(
+        self,
+        prompt: str,
+        video_path: Union[str, Path],
+        duration: Optional[float] = None,
+        aspect_ratio: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        duration = duration or self.duration
+        aspect_ratio = aspect_ratio or self.aspect_ratio
+
+        video_base64 = self._encode_file_to_base64(video_path)
+        endpoint = f"{self.BASE_URL}/v1/videos/video-editing"
+
+        payload = {
+            "model_name": self.model,
+            "prompt": prompt[:2500],
+            "input_video": video_base64,
+            "duration": str(int(duration)),
+            "aspect_ratio": aspect_ratio,
+        }
+
+        logger.info(f"Submitting Kling V2V request: model={self.model}")
+
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                endpoint,
+                headers=self._get_headers(),
+                json=payload,
+            )
+
+            if response.status_code != 200:
+                error_text = response.text
+                logger.error(f"Kling V2V API error: {response.status_code} - {error_text}")
+                raise Exception(f"Kling V2V API error: {response.status_code} - {error_text}")
+
+            result = response.json()
+
+            if result.get("code") != 0:
+                raise Exception(f"Kling V2V API error: {result.get('message', 'Unknown error')}")
+
+            task_id = result.get("data", {}).get("task_id")
+            if not task_id:
+                raise Exception(f"No task_id in V2V response: {result}")
+
+            logger.info(f"Kling V2V task submitted: {task_id}")
+
+        video_result = await self._poll_task(task_id, endpoint_type="video-editing")
+        return video_result
+
+    def _encode_file_to_base64(self, file_path: Union[str, Path]) -> str:
+        path = Path(file_path)
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {path}")
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
+
     async def _poll_task(
         self,
         task_id: str,
         is_image2video: bool = True,
         max_wait: int = 600,
-        poll_interval: int = 5
+        poll_interval: int = 5,
+        endpoint_type: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Poll for task completion."""
-        endpoint_type = "image2video" if is_image2video else "text2video"
+        if endpoint_type is None:
+            endpoint_type = "image2video" if is_image2video else "text2video"
         url = f"{self.BASE_URL}/v1/videos/{endpoint_type}/{task_id}"
         
         start_time = time.time()
@@ -431,19 +489,27 @@ class KlingWrapper(ModelWrapper):
         
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
-        # Filter kwargs to only include parameters supported by KlingService.generate_video()
         allowed_params = {'duration', 'aspect_ratio', 'negative_prompt', 'cfg_scale'}
+        video_path = kwargs.pop("video_path", None)
         kling_kwargs = {k: v for k, v in kwargs.items() if k in allowed_params}
-        
+
         try:
-            # Run async generation
-            result = asyncio.run(
-                self.kling_service.generate_video(
-                    prompt=text_prompt,
-                    image_path=image_path,
-                    **kling_kwargs
+            if video_path:
+                result = asyncio.run(
+                    self.kling_service.generate_video_v2v(
+                        prompt=text_prompt,
+                        video_path=video_path,
+                        **{k: v for k, v in kling_kwargs.items() if k in {'duration', 'aspect_ratio'}}
+                    )
                 )
-            )
+            else:
+                result = asyncio.run(
+                    self.kling_service.generate_video(
+                        prompt=text_prompt,
+                        image_path=image_path,
+                        **kling_kwargs
+                    )
+                )
             
             # Download the video
             video_url = result.get("video_url")

@@ -197,6 +197,107 @@ class LumaInference:
 
         raise LumaAPIError(f"Generation timed out after {timeout} seconds")
 
+    def generate_v2v(
+        self,
+        video_path: Union[str, Path],
+        text_prompt: str,
+        output_filename: Optional[str] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        start_time = time.time()
+
+        try:
+            video_url = self._upload_file(video_path)
+            generation_id = self._create_v2v_generation(video_url, text_prompt)
+
+            if self.verbose:
+                print(f"Started V2V generation: {generation_id}")
+
+            result_url = self._poll_generation(generation_id)
+
+            if not output_filename:
+                output_filename = "video.mp4"
+
+            out_path = self.output_dir / output_filename
+            self._download_video(result_url, out_path)
+
+            duration_seconds = time.time() - start_time
+
+            if self.verbose:
+                print(f"Generated V2V video: {out_path}")
+                print(f"   Time taken: {duration_seconds:.1f}s")
+
+            return {
+                "success": True,
+                "video_path": str(out_path),
+                "error": None,
+                "duration_seconds": duration_seconds,
+                "generation_id": generation_id,
+                "model": self.model,
+                "status": "success",
+                "metadata": {"prompt": text_prompt, "video_path_input": str(video_path)},
+            }
+
+        except Exception as e:
+            error_msg = str(e)
+            if hasattr(e, "last_attempt") and e.last_attempt.failed:
+                error_msg = str(e.last_attempt.exception())
+            return {
+                "success": False,
+                "video_path": None,
+                "error": error_msg,
+                "duration_seconds": time.time() - start_time,
+                "generation_id": "unknown",
+                "model": self.model,
+                "status": "failed",
+                "metadata": {"prompt": text_prompt, "video_path_input": str(video_path)},
+            }
+
+    def _upload_file(self, file_path: Union[str, Path]) -> str:
+        import fal_client
+
+        url = fal_client.upload_file(str(file_path))
+        if not url:
+            raise LumaAPIError("Failed to upload file to fal CDN")
+
+        if self.verbose:
+            print(f"Serving file at: {url}")
+
+        return url
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception(_is_retryable),
+    )
+    def _create_v2v_generation(self, video_url: str, text_prompt: str) -> str:
+        payload = {
+            "prompt": text_prompt,
+            "type": "video_edit",
+            "model": self.model,
+            "source": {
+                "url": video_url,
+                "media_type": "video/mp4",
+            },
+            "video": {
+                "resolution": "720p",
+                "edit": {"auto_controls": True},
+            },
+        }
+
+        response = requests.post(
+            f"{self.BASE_URL}/generations",
+            headers=self.headers,
+            json=payload,
+        )
+
+        if response.status_code in (401, 403):
+            raise LumaAuthError(f"Authentication failed ({response.status_code}): {response.text}")
+        if response.status_code not in (200, 201):
+            raise LumaAPIError(f"Failed to create V2V generation ({response.status_code}): {response.text}")
+
+        return response.json()["id"]
+
     def _download_video(self, video_url: str, output_path: Path):
         response = requests.get(video_url, stream=True)
         response.raise_for_status()
@@ -238,23 +339,17 @@ class LumaWrapper(ModelWrapper):
         output_filename: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
-        """
-        Generate video using Luma Dream Machine (matches VBVR-InferKit interface).
-        
-        Args:
-            image_path: Path to input image
-            text_prompt: Text prompt for video generation
-            duration: Video duration in seconds
-            output_filename: Optional output filename
-            **kwargs: Additional parameters
-            
-        Returns:
-            Dictionary with generation results
-        """
-        # Sync service output_dir with wrapper output_dir before each generation
-        # This ensures videos are saved to the correct location when wrapper is cached
         self.luma_service.output_dir = self.output_dir
-        
+
+        video_path = kwargs.pop("video_path", None)
+        if video_path:
+            return self.luma_service.generate_v2v(
+                video_path=video_path,
+                text_prompt=text_prompt,
+                output_filename=output_filename,
+                **kwargs
+            )
+
         return self.luma_service.generate(
             image_path=image_path,
             text_prompt=text_prompt,

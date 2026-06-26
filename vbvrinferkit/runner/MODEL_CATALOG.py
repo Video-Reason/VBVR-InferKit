@@ -30,6 +30,15 @@ LUMA_MODELS = {
         "description": "Luma Ray 3.2 (legacy alias for luma-ray-2)",
         "family": "Luma"
     },
+    "luma-ray-3.2-v2v": {
+        "wrapper_module": "vbvrinferkit.models.luma_inference",
+        "wrapper_class": "LumaWrapper",
+        "service_class": "LumaInference",
+        "model": "ray-3.2",
+        "modality": "v2v",
+        "description": "Luma Ray 3.2 Video-to-Video (video_edit via Agents API)",
+        "family": "Luma"
+    },
 }
 
 # Google Veo Models (Gemini API with GEMINI_API_KEY)
@@ -145,6 +154,15 @@ RUNWAY_MODELS = {
         "model": "gen4_turbo",
         "description": "Runway Gen-4 Turbo - Fast high-quality generation (5s or 10s)",
         "family": "Runway ML"
+    },
+    "kling-v2-6-v2v": {
+        "wrapper_module": "vbvrinferkit.models.kling_inference",
+        "wrapper_class": "KlingWrapper",
+        "service_class": "KlingService",
+        "model": "kling-v2-6",
+        "modality": "v2v",
+        "description": "Kling 2.6 Video-to-Video (video-editing endpoint)",
+        "family": "Kling AI"
     },
     # Video-to-video (text + video -> video). Consumes first_video.mp4, not first_frame.png.
     "runway-aleph-v2v": {

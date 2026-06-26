@@ -230,6 +230,10 @@ class RunwayService:
             logger.warning(f"Ratio {ratio} not supported for {self.model}. Using {valid_ratios[0]}")
             ratio = valid_ratios[0]
         
+        # Runway limits prompt_text to 1000 characters
+        if len(prompt) > 1000:
+            prompt = prompt[:997] + "..."
+
         # Process image to match target dimensions
         processed_image_path = self._resize_and_pad_image(image_path, ratio)
         
