@@ -386,39 +386,47 @@ class KlingService:
         import subprocess, tempfile, math
         probe = subprocess.run(
             ["ffprobe", "-v", "error", "-select_streams", "v",
-             "-show_entries", "stream=nb_frames,r_frame_rate",
+             "-show_entries", "stream=nb_frames,r_frame_rate,width,height",
              "-show_entries", "format=duration",
              "-of", "csv=p=0", video_path],
             capture_output=True, text=True
         )
         lines = [l.strip() for l in probe.stdout.strip().split("\n") if l.strip()]
         duration = float(lines[-1]) if lines else 0
-        if duration >= min_seconds:
-            return video_path
-        fps_str, nb_frames = None, None
+        fps_str, nb_frames, width = None, None, 0
         for line in lines:
             if "/" in line:
                 parts = line.split(",")
                 fps_str = parts[0]
                 if len(parts) > 1:
                     nb_frames = int(parts[1])
+                if len(parts) > 2:
+                    width = int(parts[2])
             elif line.replace(".", "").isdigit() and "." in line:
                 pass
-        if not nb_frames or nb_frames <= 0:
+        needs_stretch = duration < min_seconds and nb_frames and nb_frames > 0
+        needs_upscale = width < 700
+        if not needs_stretch and not needs_upscale:
             return video_path
-        target_fps = max(1, math.floor(nb_frames / min_seconds))
-        num, den = (int(x) for x in fps_str.split("/")) if fps_str and "/" in fps_str else (12, 1)
-        orig_fps = num / den
-        slow_factor = orig_fps / target_fps
+        filters = []
+        target_fps_val = None
+        if needs_stretch:
+            target_fps_val = max(1, math.floor(nb_frames / min_seconds))
+            num, den = (int(x) for x in fps_str.split("/")) if fps_str and "/" in fps_str else (12, 1)
+            orig_fps = num / den
+            slow_factor = orig_fps / target_fps_val
+            filters.append(f"setpts=PTS*{slow_factor}")
+        if needs_upscale:
+            filters.append("scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720")
         out = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False).name
-        subprocess.run(
-            ["ffmpeg", "-y", "-i", video_path,
-             "-filter:v", f"setpts=PTS*{slow_factor}",
-             "-r", str(target_fps),
-             "-c:v", "libx264", "-preset", "fast", "-crf", "18", out],
-            capture_output=True
-        )
-        logger.info(f"Stretched {nb_frames} frames from {duration:.1f}s to {nb_frames/target_fps:.1f}s (fps {orig_fps}->{target_fps})")
+        cmd = ["ffmpeg", "-y", "-i", video_path,
+               "-filter:v", ",".join(filters),
+               "-c:v", "libx264", "-preset", "fast", "-crf", "18"]
+        if target_fps_val:
+            cmd.extend(["-r", str(target_fps_val)])
+        cmd.append(out)
+        subprocess.run(cmd, capture_output=True)
+        logger.info(f"Adapted video: stretch={needs_stretch} upscale={needs_upscale} width={width}")
         return out
 
     def _encode_file_to_base64(self, file_path: Union[str, Path]) -> str:
