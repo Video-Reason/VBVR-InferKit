@@ -448,10 +448,7 @@ class KlingService:
         """Poll for task completion."""
         if endpoint_type is None:
             endpoint_type = "image2video" if is_image2video else "text2video"
-        if endpoint_type == "omni-video":
-            url = f"{self.BASE_URL}/v1/tasks/{task_id}"
-        else:
-            url = f"{self.BASE_URL}/v1/videos/{endpoint_type}/{task_id}"
+        url = f"{self.BASE_URL}/v1/videos/{endpoint_type}/{task_id}"
         
         start_time = time.time()
         
