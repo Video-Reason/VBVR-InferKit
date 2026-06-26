@@ -159,9 +159,9 @@ RUNWAY_MODELS = {
         "wrapper_module": "vbvrinferkit.models.kling_inference",
         "wrapper_class": "KlingWrapper",
         "service_class": "KlingService",
-        "model": "kling-v2-6",
+        "model": "kling-video-o1",
         "modality": "v2v",
-        "description": "Kling 2.6 Video-to-Video (video-editing endpoint)",
+        "description": "Kling Omni V2V via /v1/videos/omni-video endpoint",
         "family": "Kling AI"
     },
     # Video-to-video (text + video -> video). Consumes first_video.mp4, not first_frame.png.

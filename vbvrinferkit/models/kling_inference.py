@@ -327,21 +327,26 @@ class KlingService:
         duration: Optional[float] = None,
         aspect_ratio: Optional[str] = None,
     ) -> Dict[str, Any]:
-        duration = duration or self.duration
         aspect_ratio = aspect_ratio or self.aspect_ratio
 
-        video_base64 = self._encode_file_to_base64(video_path)
-        endpoint = f"{self.BASE_URL}/v1/videos/video-editing"
+        adapted_path = self._ensure_min_duration(str(video_path), min_seconds=3.0)
+        video_url = self._upload_file(adapted_path)
+        endpoint = f"{self.BASE_URL}/v1/videos/omni-video"
 
         payload = {
-            "model_name": self.model,
+            "model_name": "kling-video-o1",
             "prompt": prompt[:2500],
-            "input_video": video_base64,
-            "duration": str(int(duration)),
+            "video_list": [
+                {
+                    "video_url": video_url,
+                    "refer_type": "base",
+                }
+            ],
+            "mode": "pro",
             "aspect_ratio": aspect_ratio,
         }
 
-        logger.info(f"Submitting Kling V2V request: model={self.model}")
+        logger.info(f"Submitting Kling V2V (omni-video) request")
 
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
@@ -366,8 +371,55 @@ class KlingService:
 
             logger.info(f"Kling V2V task submitted: {task_id}")
 
-        video_result = await self._poll_task(task_id, endpoint_type="video-editing")
+        video_result = await self._poll_task(task_id, endpoint_type="omni-video")
         return video_result
+
+    def _upload_file(self, file_path: Union[str, Path]) -> str:
+        import fal_client
+        url = fal_client.upload_file(str(file_path))
+        if not url:
+            raise Exception("Failed to upload file to fal CDN")
+        logger.info(f"Uploaded file to: {url}")
+        return url
+
+    def _ensure_min_duration(self, video_path: str, min_seconds: float = 3.0) -> str:
+        import subprocess, tempfile, math
+        probe = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v",
+             "-show_entries", "stream=nb_frames,r_frame_rate",
+             "-show_entries", "format=duration",
+             "-of", "csv=p=0", video_path],
+            capture_output=True, text=True
+        )
+        lines = [l.strip() for l in probe.stdout.strip().split("\n") if l.strip()]
+        duration = float(lines[-1]) if lines else 0
+        if duration >= min_seconds:
+            return video_path
+        fps_str, nb_frames = None, None
+        for line in lines:
+            if "/" in line:
+                parts = line.split(",")
+                fps_str = parts[0]
+                if len(parts) > 1:
+                    nb_frames = int(parts[1])
+            elif line.replace(".", "").isdigit() and "." in line:
+                pass
+        if not nb_frames or nb_frames <= 0:
+            return video_path
+        target_fps = max(1, math.floor(nb_frames / min_seconds))
+        num, den = (int(x) for x in fps_str.split("/")) if fps_str and "/" in fps_str else (12, 1)
+        orig_fps = num / den
+        slow_factor = orig_fps / target_fps
+        out = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False).name
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", video_path,
+             "-filter:v", f"setpts=PTS*{slow_factor}",
+             "-r", str(target_fps),
+             "-c:v", "libx264", "-preset", "fast", "-crf", "18", out],
+            capture_output=True
+        )
+        logger.info(f"Stretched {nb_frames} frames from {duration:.1f}s to {nb_frames/target_fps:.1f}s (fps {orig_fps}->{target_fps})")
+        return out
 
     def _encode_file_to_base64(self, file_path: Union[str, Path]) -> str:
         path = Path(file_path)
@@ -387,7 +439,10 @@ class KlingService:
         """Poll for task completion."""
         if endpoint_type is None:
             endpoint_type = "image2video" if is_image2video else "text2video"
-        url = f"{self.BASE_URL}/v1/videos/{endpoint_type}/{task_id}"
+        if endpoint_type == "omni-video":
+            url = f"{self.BASE_URL}/v1/tasks/{task_id}"
+        else:
+            url = f"{self.BASE_URL}/v1/videos/{endpoint_type}/{task_id}"
         
         start_time = time.time()
         
