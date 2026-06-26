@@ -410,7 +410,6 @@ class KlingService:
         if not needs_stretch and not needs_upscale:
             return video_path
         filters = []
-        target_fps_val = None
         if needs_stretch:
             target_fps_val = max(1, math.floor(nb_frames / min_seconds))
             num, den = (int(x) for x in fps_str.split("/")) if fps_str and "/" in fps_str else (12, 1)
@@ -422,9 +421,8 @@ class KlingService:
         out = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False).name
         cmd = ["ffmpeg", "-y", "-i", video_path,
                "-filter:v", ",".join(filters),
+               "-r", "24",
                "-c:v", "libx264", "-preset", "fast", "-crf", "18"]
-        if target_fps_val:
-            cmd.extend(["-r", str(target_fps_val)])
         cmd.append(out)
         subprocess.run(cmd, capture_output=True)
         logger.info(f"Adapted video: stretch={needs_stretch} upscale={needs_upscale} width={width}")
