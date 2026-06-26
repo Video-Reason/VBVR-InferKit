@@ -12,14 +12,22 @@ from typing import Dict, Any
 # COMMERCIAL MODELS
 # ========================================
 
-# Luma Dream Machine Models
+# Luma Models (Agents API)
 LUMA_MODELS = {
+    "luma-ray-3.2": {
+        "wrapper_module": "vbvrinferkit.models.luma_inference",
+        "wrapper_class": "LumaWrapper",
+        "service_class": "LumaInference",
+        "model": "ray-3.2",
+        "description": "Luma Ray 3.2 - Latest video generation via Agents API",
+        "family": "Luma"
+    },
     "luma-ray-2": {
         "wrapper_module": "vbvrinferkit.models.luma_inference",
         "wrapper_class": "LumaWrapper",
         "service_class": "LumaInference",
         "model": "ray-3.2",
-        "description": "Luma Ray 3.2 - Latest video generation model",
+        "description": "Luma Ray 3.2 (legacy alias for luma-ray-2)",
         "family": "Luma"
     },
 }

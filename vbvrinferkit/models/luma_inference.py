@@ -2,7 +2,7 @@
 Luma Ray inference implementation.
 
 Direct inference API for Luma's text+image→video generation.
-Uses the agents.lumalabs.ai/v1 API and fal CDN for image hosting.
+Uses the Luma Agents API (agents.lumalabs.ai/v1) with fal CDN for image hosting.
 """
 
 import os
@@ -10,17 +10,25 @@ import time
 import requests
 from typing import Optional, Dict, Any, Union
 from pathlib import Path
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 from dotenv import load_dotenv
 
 from .base import ModelWrapper
 
-# Load environment variables from .env file
 load_dotenv()
 
 
 class LumaAPIError(Exception):
     pass
+
+
+class LumaAuthError(LumaAPIError):
+    """Non-retryable authentication error."""
+    pass
+
+
+def _is_retryable(exc):
+    return not isinstance(exc, LumaAuthError)
 
 
 class LumaInference:
@@ -35,11 +43,11 @@ class LumaInference:
         output_dir: str = "./outputs",
         **kwargs,
     ):
-        self.api_key = os.getenv("LUMA_API_KEY")
+        self.api_key = os.getenv("LUMA_AGENTS_API_KEY") or os.getenv("LUMA_API_KEY")
         if not self.api_key:
             raise ValueError(
-                "Luma API not configured: LUMA_API_KEY environment variable required.\n"
-                "Set LUMA_API_KEY in your environment or .env file."
+                "Luma API not configured.\n"
+                "Set LUMA_AGENTS_API_KEY (preferred) or LUMA_API_KEY in your environment."
             )
 
         self.aspect_ratio = aspect_ratio
@@ -96,11 +104,14 @@ class LumaInference:
                 "metadata": {"prompt": text_prompt, "image_path": str(image_path)},
             }
 
-        except (LumaAPIError, Exception) as e:
+        except Exception as e:
+            error_msg = str(e)
+            if hasattr(e, "last_attempt") and e.last_attempt.failed:
+                error_msg = str(e.last_attempt.exception())
             return {
                 "success": False,
                 "video_path": None,
-                "error": str(e),
+                "error": error_msg,
                 "duration_seconds": time.time() - start_time,
                 "generation_id": "unknown",
                 "model": self.model,
@@ -123,6 +134,7 @@ class LumaInference:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),
+        retry=retry_if_exception(_is_retryable),
     )
     def _create_generation(self, image_url: str, text_prompt: str) -> str:
         payload = {
@@ -130,11 +142,12 @@ class LumaInference:
             "type": "video",
             "model": self.model,
             "aspect_ratio": self.aspect_ratio,
-            "keyframes": {
-                "frame0": {
-                    "type": "image",
+            "video": {
+                "resolution": "720p",
+                "duration": "5s",
+                "start_frame": {
                     "url": image_url,
-                }
+                },
             },
         }
 
@@ -144,8 +157,10 @@ class LumaInference:
             json=payload,
         )
 
-        if response.status_code != 201:
-            raise LumaAPIError(f"Failed to create generation: {response.text}")
+        if response.status_code in (401, 403):
+            raise LumaAuthError(f"Authentication failed ({response.status_code}): {response.text}")
+        if response.status_code not in (200, 201):
+            raise LumaAPIError(f"Failed to create generation ({response.status_code}): {response.text}")
 
         return response.json()["id"]
 
