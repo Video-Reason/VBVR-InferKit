@@ -344,23 +344,30 @@ class RunwayService:
         if len(prompt) > 1000:
             prompt = prompt[:997] + "..."
 
-        video_path = self._ensure_min_duration(str(video_path), min_seconds=2.0)
-        video_uri = await self._upload_file(video_path)
+        adapted_path = self._ensure_min_duration(str(video_path), min_seconds=2.0)
+        try:
+            video_uri = await self._upload_file(adapted_path)
 
-        result = await self._generate_v2v_with_runway(prompt, video_uri, ratio)
+            result = await self._generate_v2v_with_runway(prompt, video_uri, ratio)
 
-        if output_path and result.get("video_url"):
-            saved_path = await self._download_video(result["video_url"], output_path)
-            result["video_path"] = str(saved_path)
-            logger.info(f"Video saved to: {saved_path}")
+            if output_path and result.get("video_url"):
+                saved_path = await self._download_video(result["video_url"], output_path)
+                result["video_path"] = str(saved_path)
+                logger.info(f"Video saved to: {saved_path}")
 
-        result.update({
-            "model": self.model,
-            "prompt": prompt,
-            "video_path_input": str(video_path),
-            "ratio": ratio,
-        })
-        return result
+            result.update({
+                "model": self.model,
+                "prompt": prompt,
+                "video_path_input": str(video_path),
+                "ratio": ratio,
+            })
+            return result
+        finally:
+            if adapted_path != str(video_path):
+                try:
+                    os.unlink(adapted_path)
+                except OSError:
+                    pass
 
     async def _generate_v2v_with_runway(
         self, prompt: str, video_uri: str, ratio: Optional[str]

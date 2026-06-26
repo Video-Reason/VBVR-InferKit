@@ -330,49 +330,56 @@ class KlingService:
         aspect_ratio = aspect_ratio or self.aspect_ratio
 
         adapted_path = self._ensure_min_duration(str(video_path), min_seconds=4.0)
-        video_url = self._upload_file(adapted_path)
-        endpoint = f"{self.BASE_URL}/v1/videos/omni-video"
+        try:
+            video_url = self._upload_file(adapted_path)
+            endpoint = f"{self.BASE_URL}/v1/videos/omni-video"
 
-        payload = {
-            "model_name": "kling-video-o1",
-            "prompt": prompt[:2500],
-            "video_list": [
-                {
-                    "video_url": video_url,
-                    "refer_type": "base",
-                }
-            ],
-            "mode": "pro",
-            "aspect_ratio": aspect_ratio,
-        }
+            payload = {
+                "model_name": "kling-video-o1",
+                "prompt": prompt[:2500],
+                "video_list": [
+                    {
+                        "video_url": video_url,
+                        "refer_type": "base",
+                    }
+                ],
+                "mode": "pro",
+                "aspect_ratio": aspect_ratio,
+            }
 
-        logger.info(f"Submitting Kling V2V (omni-video) request")
+            logger.info(f"Submitting Kling V2V (omni-video) request")
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                endpoint,
-                headers=self._get_headers(),
-                json=payload,
-            )
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(
+                    endpoint,
+                    headers=self._get_headers(),
+                    json=payload,
+                )
 
-            if response.status_code != 200:
-                error_text = response.text
-                logger.error(f"Kling V2V API error: {response.status_code} - {error_text}")
-                raise Exception(f"Kling V2V API error: {response.status_code} - {error_text}")
+                if response.status_code != 200:
+                    error_text = response.text
+                    logger.error(f"Kling V2V API error: {response.status_code} - {error_text}")
+                    raise Exception(f"Kling V2V API error: {response.status_code} - {error_text}")
 
-            result = response.json()
+                result = response.json()
 
-            if result.get("code") != 0:
-                raise Exception(f"Kling V2V API error: {result.get('message', 'Unknown error')}")
+                if result.get("code") != 0:
+                    raise Exception(f"Kling V2V API error: {result.get('message', 'Unknown error')}")
 
-            task_id = result.get("data", {}).get("task_id")
-            if not task_id:
-                raise Exception(f"No task_id in V2V response: {result}")
+                task_id = result.get("data", {}).get("task_id")
+                if not task_id:
+                    raise Exception(f"No task_id in V2V response: {result}")
 
-            logger.info(f"Kling V2V task submitted: {task_id}")
+                logger.info(f"Kling V2V task submitted: {task_id}")
 
-        video_result = await self._poll_task(task_id, endpoint_type="omni-video")
-        return video_result
+            video_result = await self._poll_task(task_id, endpoint_type="omni-video")
+            return video_result
+        finally:
+            if adapted_path != str(video_path):
+                try:
+                    os.unlink(adapted_path)
+                except OSError:
+                    pass
 
     def _upload_file(self, file_path: Union[str, Path]) -> str:
         import fal_client
