@@ -341,6 +341,9 @@ class RunwayService:
         # input video. `duration` is accepted/ignored here only for interface symmetry
         # with i2v; it is never forwarded to the v2v endpoint.
 
+        if len(prompt) > 1000:
+            prompt = prompt[:997] + "..."
+
         video_path = self._ensure_min_duration(str(video_path), min_seconds=2.0)
         video_uri = await self._upload_file(video_path)
 
